@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miniso Blind Box - Special Edition</title>
+    <style>
+        :root {
+            --miniso-red: #e11d48;
+            --gold: #fbbf24;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #fff5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 { color: var(--miniso-red); margin-bottom: 5px; }
+        p { color: #666; margin-bottom: 30px; }
+
+        /* Lưới 4 hộp quà */
+        .box-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        @media (min-width: 600px) {
+            .box-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .box {
+            width: 140px;
+            height: 180px;
+            background: var(--miniso-red);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 0 #9f1239, 0 15px 20px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .box:hover { transform: translateY(-5px); }
+        .box:active { transform: translateY(5px); box-shadow: 0 5px 0 #9f1239; }
+
+        /* Hiệu ứng rung */
+        .shake { animation: shake 0.15s infinite; }
+        @keyframes shake {
+            0% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        /* Overlay (Màn hình phóng to) */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none; /* Ẩn mặc định */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .prize-display {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            max-width: 300px;
+            width: 80%;
+            transform: scale(0.5);
+            animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popUp { to { transform: scale(1); } }
+
+        .prize-display img {
+            width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        .prize-display h2 { margin: 10px 0; color: #333; }
+        
+        .rarity-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .btn-close {
+            margin-top: 25px;
+            padding: 12px 30px;
+            background: var(--miniso-red);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4);
+        }
+
+        /* Đặc biệt cho món Secret */
+        .is-secret { border: 5px solid var(--gold); box-shadow: 0 0 30px var(--gold); }
+    </style>
+</head>
+<body>
+
+    <h1>MINISO BLIND BOX</h1>
+    <p>Chạm vào 1 hộp duy nhất để nhận quà!</p>
+
+    <div class="box-grid" id="mainGrid">
+        <div class="box" onclick="openBox(this)">?</div>
+        <div class="box" onclick="openBox(this)">?</div>
+        <div class="box" onclick="openBox(this)">?</div>
+        <div class="box" onclick="openBox(this)">?</div>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="prize-display" id="prizeDisplay">
+            <div id="rarityBadge" class="rarity-badge">COMMON</div>
+            <img id="prizeImg" src="" alt="Gift">
+            <h2 id="prizeName">Tên Quà Tặng</h2>
+            <button class="btn-close" onclick="closeAndReset()">Nhận Quà & Chơi Tiếp</button>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            { 
+                name: "Loopy Ngái Ngủ", 
+                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xNq8rE_jFfW8V2I3I6D-vX7-i2o-n_Jq2A&s", 
+                rarity: "Common", color: "#94a3b8", chance: 40 
+            },
+            { 
+                name: "Kuromi Punk", 
+                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTy95K-Y4N5wB_x4N4N_4W-w3A5Y4-w3A5Y4A&s", 
+                rarity: "Common", color: "#a855f7", chance: 35 
+            },
+            { 
+                name: "Gấu Lotso", 
+                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7v1_N_7-N_4W-w3A5Y4-w3A5Y4A5Y4-w3A&s", 
+                rarity: "Rare", color: "#ec4899", chance: 20 
+            },
+            { 
+                name: "Mickey Gold (SECRET)", 
+                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_xNq8rE_jFfW8V2I3I6D-vX7-i2o-n_Jq2A&s", 
+                rarity: "Secret", color: "#fbbf24", chance: 5 
+            }
+        ];
+
+        let isOpening = false;
+
+        function openBox(boxElement) {
+            if (isOpening) return; // Không cho phép bấm thêm hộp khác
+            isOpening = true;
+
+            // Hiệu ứng rung hộp đang chọn
+            boxElement.classList.add('shake');
+            boxElement.innerText = "⏳";
+
+            setTimeout(() => {
+                const prize = getRandomItem();
+                showPopup(prize);
+            }, 1000);
+        }
+
+        function getRandomItem() {
+            let rand = Math.random() * 100;
+            let cumulative = 0;
+            for (let item of items) {
+                cumulative += item.chance;
+                if (rand < cumulative) return item;
+            }
+            return items[0];
+        }
+
+        function showPopup(prize) {
+            const overlay = document.getElementById('overlay');
+            const display = document.getElementById('prizeDisplay');
+            
+            document.getElementById('prizeImg').src = prize.image;
+            document.getElementById('prizeName').innerText = prize.name;
+            
+            const badge = document.getElementById('rarityBadge');
+            badge.innerText = prize.rarity.toUpperCase();
+            badge.style.backgroundColor = prize.color;
+
+            // Nếu là Secret thì thêm hiệu ứng lấp lánh
+            if (prize.rarity === "Secret") {
+                display.classList.add('is-secret');
+            } else {
+                display.classList.remove('is-secret');
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        function closeAndReset() {
+            // Tự động load lại trang để reset ván mới
+            location.reload();
+        }
+    </script>
+</body>
+</html>
